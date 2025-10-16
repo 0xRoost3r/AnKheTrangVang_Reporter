@@ -239,17 +239,23 @@
             let cumSlots = 0;
             let cumPnlPullbackLine = 0;
             let cumMaxdd = 0;
+            let currentLot = initSlot; // Track cumulative rounding
 
             for (let i = 0; i < maxLine; i++) {
                 const index = i + 1;
                 const lineLevel = i;
-                
+
                 // Giá
                 const price = startPrice - (lineLevel * distance);
-                
-                // Slot
-                const slotRaw = initSlot * Math.pow(multi, lineLevel);
-                const slot = Math.ceil(slotRaw * 100) / 100;
+
+                // Slot - Use cumulative rounding (MT5 logic)
+                let slot;
+                if (i === 0) {
+                    slot = initSlot;
+                } else {
+                    slot = Math.round(currentLot * multi * 100) / 100;
+                }
+                currentLot = slot; // Update for next iteration
                 
                 // Thay đổi giá
                 const priceChanged = markPrice - price;
@@ -286,12 +292,18 @@
                 });
             }
 
-            // Tính tổng kết
+            // Tính tổng kết - Use cumulative rounding (MT5 logic)
             let sumProduct = 0;
+            let currentLotSummary = initSlot;
             for (let i = 0; i < maxLine; i++) {
                 const price = startPrice - (i * distance);
-                const slotRaw = initSlot * Math.pow(multi, i);
-                const slot = Math.ceil(slotRaw * 100) / 100;
+                let slot;
+                if (i === 0) {
+                    slot = initSlot;
+                } else {
+                    slot = Math.round(currentLotSummary * multi * 100) / 100;
+                }
+                currentLotSummary = slot;
                 sumProduct += price * slot;
             }
             const weightedAvgEntry = sumProduct / cumSlots;
@@ -387,7 +399,11 @@
         }
 
         function displayRiskWarning(initSlot, multi, maxLine, totalSlots, distance) {
-            const maxSlot = Math.ceil((initSlot * Math.pow(multi, maxLine - 1)) * 100) / 100;
+            // Calculate max slot using cumulative rounding (MT5 logic)
+            let maxSlot = initSlot;
+            for (let i = 1; i < maxLine; i++) {
+                maxSlot = Math.round(maxSlot * multi * 100) / 100;
+            }
             const increase = maxSlot / initSlot;
 
             document.getElementById('riskWarning').innerHTML = `
