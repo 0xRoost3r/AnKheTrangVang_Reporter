@@ -176,6 +176,10 @@
                     <label for="maxLine">Số dòng tối đa</label>
                     <input type="number" id="maxLine" value="15" step="1">
                 </div>
+                <div class="input-group">
+                    <label for="fund">Số vốn ($)</label>
+                    <input type="number" id="fund" value="7500" step="100">
+                </div>
             </div>
             <button class="calculate-btn" onclick="calculateDCA()">🚀 TÍNH TOÁN DCA</button>
         </div>
@@ -230,6 +234,7 @@
             const pullback = parseFloat(document.getElementById('pullback').value);
             const startPrice = parseFloat(document.getElementById('startPrice').value);
             const maxLine = parseInt(document.getElementById('maxLine').value);
+            const fund = parseFloat(document.getElementById('fund').value);
 
             // Tính MARK_PRICE tự động
             const markPrice = startPrice - ((maxLine - 1) * distance);
@@ -313,6 +318,16 @@
             const pullbackProfitMargin = (markPrice + pullback) - weightedAvgEntry;
             const pullbackProfitPercent = (pullbackProfitMargin / weightedAvgEntry * 100);
 
+            // Calculate Stop Loss Price (Liquidation Price)
+            // At worst case: price drops to worst level, then continues dropping
+            // P&L = (price - weightedAvgEntry) * cumSlots * 100
+            // When P&L = -fund, price = liquidation price
+            // -fund = (liquidationPrice - weightedAvgEntry) * cumSlots * 100
+            // liquidationPrice = weightedAvgEntry - (fund / (cumSlots * 100))
+            const stopLossPrice = weightedAvgEntry - (fund / (cumSlots * 100));
+            const maxDrawdownAllowed = fund;
+            const priceRangeAllowed = weightedAvgEntry - stopLossPrice;
+
             // Hiển thị tổng kết
             displaySummary({
                 totalSlots: cumSlots,
@@ -323,7 +338,11 @@
                 currentProfitMargin,
                 currentProfitPercent,
                 pullbackProfitMargin,
-                pullbackProfitPercent
+                pullbackProfitPercent,
+                stopLossPrice,
+                maxDrawdownAllowed,
+                priceRangeAllowed,
+                fund
             });
 
             // Hiển thị bảng
@@ -366,6 +385,19 @@
                 <div class="summary-item">
                     <h4>🎯 Biên lợi nhuận Pullback</h4>
                     <div class="value">$${data.pullbackProfitMargin.toFixed(3)} (${data.pullbackProfitPercent.toFixed(2)}%)</div>
+                </div>
+                <div class="summary-item">
+                    <h4>💼 Số vốn</h4>
+                    <div class="value">$${data.fund.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div>
+                </div>
+                <div class="summary-item">
+                    <h4>🛑 Giá Stop Loss (Liquidation)</h4>
+                    <div class="value">$${data.stopLossPrice.toFixed(3)}</div>
+                    <div class="value" style="font-size: 0.9em; color: #ff6b6b; margin-top: 5px;">Khoảng giá: $${data.weightedAvgEntry.toFixed(3)} → $${data.stopLossPrice.toFixed(3)} (Δ $${data.priceRangeAllowed.toFixed(3)})</div>
+                </div>
+                <div class="summary-item">
+                    <h4>📊 Max Drawdown Cho Phép</h4>
+                    <div class="value">$${data.maxDrawdownAllowed.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div>
                 </div>
             `;
         }
