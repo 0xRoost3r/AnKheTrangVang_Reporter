@@ -326,7 +326,7 @@
             // liquidationPrice = weightedAvgEntry - (fund / (cumSlots * 100))
             const stopLossPrice = weightedAvgEntry - (fund / (cumSlots * 100));
             const maxDrawdownAllowed = fund;
-            const priceRangeAllowed = weightedAvgEntry - stopLossPrice;
+            const priceRangeAllowed = startPrice - stopLossPrice;
 
             // Hiển thị tổng kết
             displaySummary({
@@ -342,7 +342,8 @@
                 stopLossPrice,
                 maxDrawdownAllowed,
                 priceRangeAllowed,
-                fund
+                fund,
+                startPrice
             });
 
             // Hiển thị bảng
@@ -393,7 +394,7 @@
                 <div class="summary-item">
                     <h4>🛑 Giá Stop Loss (Liquidation)</h4>
                     <div class="value">$${data.stopLossPrice.toFixed(3)}</div>
-                    <div class="value" style="font-size: 0.9em; color: #ff6b6b; margin-top: 5px;">Khoảng giá: $${data.weightedAvgEntry.toFixed(3)} → $${data.stopLossPrice.toFixed(3)} (Δ $${data.priceRangeAllowed.toFixed(3)})</div>
+                    <div class="value" style="font-size: 0.9em; color: #ff6b6b; margin-top: 5px;">Khoảng giá: $${data.startPrice.toFixed(3)} → $${data.stopLossPrice.toFixed(3)} (Δ $${data.priceRangeAllowed.toFixed(3)})</div>
                 </div>
                 <div class="summary-item">
                     <h4>📊 Max Drawdown Cho Phép</h4>
